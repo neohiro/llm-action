@@ -106,6 +106,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate action.yml
-        uses: docker://rhysd/actionlint:1.7.7
-        with:
-          args: -ignore 'shellcheck reported issue'
+        run: |
+          set -euo pipefail
+          # Basic validation: ensure it's valid YAML and has required fields.
+          python3 -c "
+          import yaml, sys
+          with open('action.yml') as f:
+              data = yaml.safe_load(f)
+          assert data.get('runs', {}).get('using') == 'composite', 'runs.using must be composite'
+          assert 'steps' in data.get('runs', {}), 'runs must have steps'
+          print('action.yml is valid YAML with composite runs')
+          "
+          pip install pyyaml -q

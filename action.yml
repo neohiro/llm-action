@@ -133,11 +133,20 @@ runs:
           DATA_DIR="$CONSUMER_ROOT/$DATA_DIR_RAW"
         fi
         mkdir -p "$DATA_DIR"
+        # Helper: copy file only if source and destination differ.
+        # (When testing the action in-tree, src and dst are the same file.)
+        copy_if_differs() {
+          local src="$1"
+          local dst="$2"
+          if [ "$(realpath "$src" 2>/dev/null || echo "$src")" != "$(realpath "$dst" 2>/dev/null || echo "$dst")" ]; then
+            cp -f "$src" "$dst"
+          fi
+        }
         # Copy JSON data files (overwrite — these are the source of truth).
-        cp -f "$ACTION_DIR/data/providers.json" "$DATA_DIR/providers.json"
-        cp -f "$ACTION_DIR/data/models.json" "$DATA_DIR/models.json"
-        cp -f "$ACTION_DIR/data/free_models.json" "$DATA_DIR/free_models.json"
-        cp -f "$ACTION_DIR/data/unlimited.json" "$DATA_DIR/unlimited.json"
+        copy_if_differs "$ACTION_DIR/data/providers.json" "$DATA_DIR/providers.json"
+        copy_if_differs "$ACTION_DIR/data/models.json" "$DATA_DIR/models.json"
+        copy_if_differs "$ACTION_DIR/data/free_models.json" "$DATA_DIR/free_models.json"
+        copy_if_differs "$ACTION_DIR/data/unlimited.json" "$DATA_DIR/unlimited.json"
         # Strip BOM defensively (some Windows editors add it).
         for f in providers.json models.json free_models.json unlimited.json; do
           if [ -f "$DATA_DIR/$f" ]; then
@@ -146,7 +155,7 @@ runs:
         done
         ROUTER_MODULE_DIR="$CONSUMER_ROOT/.github-actions/llm-router"
         mkdir -p "$ROUTER_MODULE_DIR"
-        cp -f "$ACTION_DIR/llm/router.py" "$ROUTER_MODULE_DIR/router.py"
+        copy_if_differs "$ACTION_DIR/llm/router.py" "$ROUTER_MODULE_DIR/router.py"
         chmod +x "$ROUTER_MODULE_DIR/router.py" 2>/dev/null || true
         echo "data-dir=$DATA_DIR" >> "$GITHUB_OUTPUT"
         echo "router-module-path=$ROUTER_MODULE_DIR" >> "$GITHUB_OUTPUT"
