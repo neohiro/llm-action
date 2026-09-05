@@ -1,0 +1,8 @@
+# neohiro/llm-action's action.yml sets up Python, but the action itself doesn't
+# need a runtime Python dependency — the consumer's `requirements.txt` is what
+# matters. This stub exists so `actions/setup-python@v5`'s `cache-pip` feature
+# has a file to detect when the action is being self-tested in-tree.
+# Consumer workflows should pass `cache-path: requirements.txt` pointing to
+# their own requirements file (or any path that exists in their repo).
+pytest>=8.0
+pyyaml>=6.0
