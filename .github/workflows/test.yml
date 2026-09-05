@@ -1,0 +1,111 @@
+name: Action smoke test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  vendor-and-import:
+    name: Vendor + import smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the action
+        id: llm-router
+        uses: ./
+        with:
+          llm-router-enabled: true
+          llm-model: gpt-4o
+          data-dir: data
+
+      - name: Verify JSON data files exist
+        run: |
+          set -euo pipefail
+          for f in providers.json models.json free_models.json unlimited.json; do
+            if [ ! -s "${{ steps.llm-router.outputs.data-dir }}/$f" ]; then
+              echo "::error::Missing or empty $f in ${{ steps.llm-router.outputs.data-dir }}"
+              exit 1
+            fi
+            # Confirm no BOM
+            first_byte=$(head -c 1 "${{ steps.llm-router.outputs.data-dir }}/$f" | xxd -p)
+            if [ "$first_byte" = "efbbbf" ]; then
+              echo "::error::$f still has UTF-8 BOM"
+              exit 1
+            fi
+            # Confirm valid JSON
+            python3 -c "import json,sys; json.load(open('${{ steps.llm-router.outputs.data-dir }}/$f'))" || {
+              echo "::error::$f is not valid JSON"
+              exit 1
+            }
+            echo "OK: $f"
+          done
+
+      - name: Verify router module is importable
+        run: |
+          set -euo pipefail
+          python3 -c "
+          import sys
+          sys.path.insert(0, '${{ steps.llm-router.outputs.router-module-path }}')
+          from router import FreeModelsRouter
+          assert FreeModelsRouter is not None
+          print('router.py imports OK')
+          "
+
+      - name: Verify env vars were exported
+        env:
+          EXPECTED_DATA_DIR: ${{ steps.llm-router.outputs.data-dir }}
+        run: |
+          set -euo pipefail
+          if [ "$ACTION_DATA_DIR" != "$EXPECTED_DATA_DIR" ]; then
+            echo "::error::ACTION_DATA_DIR=$ACTION_DATA_DIR != $EXPECTED_DATA_DIR"
+            exit 1
+          fi
+          echo "ACTION_DATA_DIR=$ACTION_DATA_DIR"
+          echo "LLM_ROUTER_ENABLED=$LLM_ROUTER_ENABLED"
+          echo "LLM_MODEL=$LLM_MODEL"
+
+  vendor-with-keys:
+    name: Vendor with provider keys
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run with fake keys
+        id: llm-router
+        uses: ./
+        with:
+          groq-key: "gsk-fake-test-key-do-not-use"
+          cerebras-key: "csk-fake-test-key"
+          llm-router-enabled: true
+          data-dir: data
+
+      - name: Verify provider list contains groq and cerebras
+        run: |
+          set -euo pipefail
+          echo "Available providers: ${{ steps.llm-router.outputs.available-providers }}"
+          if [[ "${{ steps.llm-router.outputs.available-providers }}" != *"groq"* ]]; then
+            echo "::error::Expected 'groq' in available-providers"
+            exit 1
+          fi
+          if [[ "${{ steps.llm-router.outputs.available-providers }}" != *"cerebras"* ]]; then
+            echo "::error::Expected 'cerebras' in available-providers"
+            exit 1
+          fi
+          if [ "$GROQ_API_KEY" != "gsk-fake-test-key-do-not-use" ]; then
+            echo "::error::GROQ_API_KEY not exported correctly"
+            exit 1
+          fi
+          echo "OK: keys introspected and exported"
+
+  lint:
+    name: Lint action.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate action.yml
+        uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -ignore 'shellcheck reported issue'

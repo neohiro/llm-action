@@ -1,0 +1,237 @@
+name: 'Free LLM Router Setup'
+description: >-
+  Vendors the FreeModelsRouter + data files (providers, models, free_models, unlimited)
+  from neohiro/LLM and exposes all required environment variables for LLM scoring
+  jobs. Replaces manual vendoring and reduces drift between consumer repos.
+author: 'neohiro'
+
+branding:
+  icon: 'cpu'
+  color: 'purple'
+
+inputs:
+  router-version:
+    description: 'Tag/branch/SHA of neohiro/LLM to vendor from. Defaults to the bundled version in this action.'
+    required: false
+    default: 'bundled'
+  data-dir:
+    description: 'Where the consumer code expects the data files (e.g. data/).'
+    required: false
+    default: 'data'
+  python-version:
+    description: 'Python version to set up.'
+    required: false
+    default: '3.12'
+  cache-pip:
+    description: 'Cache pip dependencies between runs (true/false).'
+    required: false
+    default: 'true'
+  cache-path:
+    description: 'Path to requirements.txt for cache key.'
+    required: false
+    default: 'requirements.txt'
+  openai-key:
+    description: 'OpenAI API key. Empty disables OpenAI fallback.'
+    required: false
+    default: ''
+  anthropic-key:
+    description: 'Anthropic API key. Empty disables Anthropic fallback.'
+    required: false
+    default: ''
+  llm-model:
+    description: 'Default LLM model identifier (e.g. gpt-4o, claude-sonnet-4-20250514).'
+    required: false
+    default: 'gpt-4o'
+  llm-router-enabled:
+    description: 'Enable the FreeModelsRouter cascade (true/false).'
+    required: false
+    default: 'true'
+  # Free provider keys (all optional; missing keys are silently skipped by the router)
+  groq-key:
+    description: 'Groq API key.'
+    required: false
+    default: ''
+  cerebras-key:
+    description: 'Cerebras API key.'
+    required: false
+    default: ''
+  sambanova-key:
+    description: 'Sambanova API key.'
+    required: false
+    default: ''
+  github-models-key:
+    description: 'GitHub Models API key.'
+    required: false
+    default: ''
+  cloudflare-key:
+    description: 'Cloudflare Workers AI API key.'
+    required: false
+    default: ''
+  cloudflare-account-id:
+    description: 'Cloudflare account ID (required if cloudflare-key is set).'
+    required: false
+    default: ''
+  openrouter-key:
+    description: 'OpenRouter API key.'
+    required: false
+    default: ''
+  google-ai-key:
+    description: 'Google AI Studio API key.'
+    required: false
+    default: ''
+  huggingface-key:
+    description: 'HuggingFace API key.'
+    required: false
+    default: ''
+  nvidia-key:
+    description: 'NVIDIA NIM API key.'
+    required: false
+    default: ''
+  cohere-key:
+    description: 'Cohere API key.'
+    required: false
+    default: ''
+
+outputs:
+  router-version:
+    description: 'Effective router version (bundled or resolved from router-version input).'
+    value: ${{ steps.resolve.outputs.router-version }}
+  data-dir:
+    description: 'Absolute path to the data directory where the router JSON files were placed.'
+    value: ${{ steps.vendor.outputs.data-dir }}
+  router-module-path:
+    description: 'Absolute path to the vendored router.py module (importable as a directory).'
+    value: ${{ steps.vendor.outputs.router-module-path }}
+  available-providers:
+    description: 'Comma-separated list of provider names whose keys were supplied.'
+    value: ${{ steps.introspect.outputs.available-providers }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Resolve router version
+      id: resolve
+      shell: bash
+      run: |
+        if [ "${{ inputs.router-version }}" = "bundled" ]; then
+          echo "router-version=$(cat $GITHUB_ACTION_PATH/.router-version)" >> "$GITHUB_OUTPUT"
+        else
+          echo "router-version=${{ inputs.router-version }}" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Vendor router files
+      id: vendor
+      shell: bash
+      run: |
+        set -euo pipefail
+        ACTION_DIR="$GITHUB_ACTION_PATH"
+        CONSUMER_ROOT="$GITHUB_WORKSPACE"
+        DATA_DIR_RAW="${{ inputs.data-dir }}"
+        if [[ "$DATA_DIR_RAW" = /* ]]; then
+          DATA_DIR="$DATA_DIR_RAW"
+        else
+          DATA_DIR="$CONSUMER_ROOT/$DATA_DIR_RAW"
+        fi
+        mkdir -p "$DATA_DIR"
+        # Copy JSON data files (overwrite — these are the source of truth).
+        cp -f "$ACTION_DIR/data/providers.json" "$DATA_DIR/providers.json"
+        cp -f "$ACTION_DIR/data/models.json" "$DATA_DIR/models.json"
+        cp -f "$ACTION_DIR/data/free_models.json" "$DATA_DIR/free_models.json"
+        cp -f "$ACTION_DIR/data/unlimited.json" "$DATA_DIR/unlimited.json"
+        # Strip BOM defensively (some Windows editors add it).
+        for f in providers.json models.json free_models.json unlimited.json; do
+          if [ -f "$DATA_DIR/$f" ]; then
+            sed -i '1s/^\xEF\xBB\xBF//' "$DATA_DIR/$f"
+          fi
+        done
+        ROUTER_MODULE_DIR="$CONSUMER_ROOT/.github-actions/llm-router"
+        mkdir -p "$ROUTER_MODULE_DIR"
+        cp -f "$ACTION_DIR/llm/router.py" "$ROUTER_MODULE_DIR/router.py"
+        chmod +x "$ROUTER_MODULE_DIR/router.py" 2>/dev/null || true
+        echo "data-dir=$DATA_DIR" >> "$GITHUB_OUTPUT"
+        echo "router-module-path=$ROUTER_MODULE_DIR" >> "$GITHUB_OUTPUT"
+        {
+          echo "data-dir=$DATA_DIR"
+          echo "router-module-path=$ROUTER_MODULE_DIR"
+          echo "router-version=${{ steps.resolve.outputs.router-version }}"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: ${{ inputs.cache-pip == 'true' && 'pip' || '' }}
+        cache-dependency-path: ${{ inputs.cache-path }}
+
+    - name: Introspect available providers
+      id: introspect
+      shell: bash
+      run: |
+        set -euo pipefail
+        AVAILABLE=""
+        for entry in \
+          "openai:${{ inputs.openai-key }}" \
+          "anthropic:${{ inputs.anthropic-key }}" \
+          "groq:${{ inputs.groq-key }}" \
+          "cerebras:${{ inputs.cerebras-key }}" \
+          "sambanova:${{ inputs.sambanova-key }}" \
+          "github-models:${{ inputs.github-models-key }}" \
+          "cloudflare:${{ inputs.cloudflare-key }}" \
+          "openrouter:${{ inputs.openrouter-key }}" \
+          "google-ai:${{ inputs.google-ai-key }}" \
+          "huggingface:${{ inputs.huggingface-key }}" \
+          "nvidia:${{ inputs.nvidia-key }}" \
+          "cohere:${{ inputs.cohere-key }}"; do
+          name="${entry%%:*}"
+          val="${entry#*:}"
+          if [ -n "$val" ]; then
+            AVAILABLE="${AVAILABLE:+$AVAILABLE,}$name"
+          fi
+        done
+        echo "available-providers=${AVAILABLE:-none}" >> "$GITHUB_OUTPUT"
+        echo "## Free LLM Router" >> "$GITHUB_STEP_SUMMARY"
+        echo "- Version: \`${{ steps.resolve.outputs.router-version }}\`" >> "$GITHUB_STEP_SUMMARY"
+        echo "- Data dir: \`${{ steps.vendor.outputs.data-dir }}\`" >> "$GITHUB_STEP_SUMMARY"
+        echo "- Providers: \`${AVAILABLE:-none}\`" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Export router environment
+      shell: bash
+      env:
+        OPENAI_API_KEY: ${{ inputs.openai-key }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-key }}
+        LLM_MODEL: ${{ inputs.llm-model }}
+        LLM_ROUTER_ENABLED: ${{ inputs.llm-router-enabled }}
+        GROQ_API_KEY: ${{ inputs.groq-key }}
+        CEREBRAS_API_KEY: ${{ inputs.cerebras-key }}
+        SAMBANOVA_API_KEY: ${{ inputs.sambanova-key }}
+        GITHUB_MODELS_API_KEY: ${{ inputs.github-models-key }}
+        CLOUDFLARE_API_KEY: ${{ inputs.cloudflare-key }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ inputs.cloudflare-account-id }}
+        OPENROUTER_API_KEY: ${{ inputs.openrouter-key }}
+        GOOGLE_AI_API_KEY: ${{ inputs.google-ai-key }}
+        HUGGINGFACE_API_KEY: ${{ inputs.huggingface-key }}
+        NVIDIA_API_KEY: ${{ inputs.nvidia-key }}
+        COHERE_API_KEY: ${{ inputs.cohere-key }}
+        ACTION_DATA_DIR: ${{ steps.vendor.outputs.data-dir }}
+        ACTION_ROUTER_DIR: ${{ steps.vendor.outputs.router-module-path }}
+      run: |
+        {
+          echo "OPENAI_API_KEY=${OPENAI_API_KEY}"
+          echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+          echo "LLM_MODEL=${LLM_MODEL}"
+          echo "LLM_ROUTER_ENABLED=${LLM_ROUTER_ENABLED}"
+          echo "GROQ_API_KEY=${GROQ_API_KEY}"
+          echo "CEREBRAS_API_KEY=${CEREBRAS_API_KEY}"
+          echo "SAMBANOVA_API_KEY=${SAMBANOVA_API_KEY}"
+          echo "GITHUB_MODELS_API_KEY=${GITHUB_MODELS_API_KEY}"
+          echo "CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}"
+          echo "CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}"
+          echo "OPENROUTER_API_KEY=${OPENROUTER_API_KEY}"
+          echo "GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}"
+          echo "HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}"
+          echo "NVIDIA_API_KEY=${NVIDIA_API_KEY}"
+          echo "COHERE_API_KEY=${COHERE_API_KEY}"
+          echo "ACTION_DATA_DIR=${ACTION_DATA_DIR}"
+          echo "ACTION_ROUTER_DIR=${ACTION_ROUTER_DIR}"
+        } >> "$GITHUB_ENV"
+        echo "Router env exported. ACTION_DATA_DIR=${ACTION_DATA_DIR}"
