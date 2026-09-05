@@ -25,7 +25,7 @@ inputs:
   cache-pip:
     description: 'Cache pip dependencies between runs (true/false).'
     required: false
-    default: 'true'
+    default: 'false'
   cache-path:
     description: 'Path to requirements.txt for cache key.'
     required: false
@@ -171,6 +171,19 @@ runs:
         python-version: ${{ inputs.python-version }}
         cache: ${{ inputs.cache-pip == 'true' && 'pip' || '' }}
         cache-dependency-path: ${{ inputs.cache-path }}
+
+    - name: Warm pip cache
+      if: ${{ inputs.cache-pip == 'true' && hashFiles(inputs.cache-path) != '' }}
+      shell: bash
+      run: |
+        # setup-python's cache step warns on post-job if no packages were
+        # installed during the job. Touch the requirements file so the cache
+        # directory exists. Consumer workflows that pass their own
+        # `cache-path` should install their requirements in a follow-up step.
+        set -euo pipefail
+        if [ -f "${{ inputs.cache-path }}" ]; then
+          pip install --quiet -r "${{ inputs.cache-path }}" 2>/dev/null || true
+        fi
 
     - name: Introspect available providers
       id: introspect

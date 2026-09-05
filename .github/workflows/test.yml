@@ -20,6 +20,8 @@ jobs:
           llm-router-enabled: true
           llm-model: gpt-4o
           data-dir: data
+          cache-pip: true
+          cache-path: requirements.txt
 
       - name: Verify JSON data files exist
         run: |
