@@ -78,3 +78,5 @@ rm data/providers.json data/models.json data/free_models.json data/unlimited.jso
 ```
 
 The action writes them fresh on every run, with BOM stripping applied automatically.
+
+[![Visitors](https://api.visitorbadge.io/api/visitors?path=github.com/neohiro/llm-action&label=Visitors&countColor=%23263759)](https://visitorbadge.io/status?path=github.com/neohiro/llm-action)
