@@ -81,6 +81,7 @@ jobs:
         with:
           groq-key: "gsk-fake-test-key-do-not-use"
           cerebras-key: "csk-fake-test-key"
+          mistral-key: "mstrl-fake-test-key"
           llm-router-enabled: true
           data-dir: data
 
@@ -96,8 +97,16 @@ jobs:
             echo "::error::Expected 'cerebras' in available-providers"
             exit 1
           fi
+          if [[ "${{ steps.llm-router.outputs.available-providers }}" != *"mistral"* ]]; then
+            echo "::error::Expected 'mistral' in available-providers"
+            exit 1
+          fi
           if [ "$GROQ_API_KEY" != "gsk-fake-test-key-do-not-use" ]; then
             echo "::error::GROQ_API_KEY not exported correctly"
+            exit 1
+          fi
+          if [ "$MISTRAL_API_KEY" != "mstrl-fake-test-key" ]; then
+            echo "::error::MISTRAL_API_KEY not exported correctly"
             exit 1
           fi
           echo "OK: keys introspected and exported"
