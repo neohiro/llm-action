@@ -13,8 +13,11 @@ import json
 import logging
 import os
 import time
-from dataclasses import asdict, dataclass, field
+import uuid
+from dataclasses import dataclass, field, asdict
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 log = logging.getLogger("router")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -43,7 +46,7 @@ class ChatResult:
     country: str
     attempts: int
     latency_ms: float
-    error: str | None = None
+    error: Optional[str] = None
 
 
 @dataclass
@@ -117,11 +120,11 @@ class FreeModelsRouter:
 
     def _candidates(
         self,
-        task: str | None = None,
+        task: Optional[str] = None,
         preferred_tier: str = "any",
-        country: str | None = None,
-        modality: str | None = None,
-        max_tokens: int | None = None,
+        country: Optional[str] = None,
+        modality: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> list[ModelChoice]:
         """Generate ranked model choices across all tiers."""
         candidates: list[ModelChoice] = []
@@ -163,10 +166,10 @@ class FreeModelsRouter:
         self,
         key: str,
         tier: str,
-        task: str | None,
-        country: str | None,
-        modality: str | None,
-    ) -> ModelChoice | None:
+        task: Optional[str],
+        country: Optional[str],
+        modality: Optional[str],
+    ) -> Optional[ModelChoice]:
         model_data = self.models.get(key, {})
         provider_id = model_data.get("provider", key.split(":")[0])
         provider = self.providers.get(provider_id, {})
@@ -214,7 +217,7 @@ class FreeModelsRouter:
         )
 
     @staticmethod
-    def _task_match(suitable_for: list[str], task: str | None) -> float:
+    def _task_match(suitable_for: list[str], task: Optional[str]) -> float:
         if not task:
             return 0.5
         task = task.lower()
@@ -237,11 +240,11 @@ class FreeModelsRouter:
 
     def pick(
         self,
-        task: str | None = None,
+        task: Optional[str] = None,
         preferred_tier: str = "any",
-        country: str | None = None,
-        modality: str | None = None,
-        max_tokens: int | None = None,
+        country: Optional[str] = None,
+        modality: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> ModelChoice:
         """Return the best model for the given constraints."""
         candidates = self._candidates(task, preferred_tier, country, modality, max_tokens)
@@ -259,9 +262,9 @@ class FreeModelsRouter:
         self,
         messages: list[dict],
         preferred_tier: str = "free",
-        task: str | None = None,
-        country: str | None = None,
-        max_tokens: int | None = None,
+        task: Optional[str] = None,
+        country: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> ChatResult:
         """Run a chat completion with cascade fallback."""
         start = time.monotonic()
@@ -320,7 +323,7 @@ class FreeModelsRouter:
         self,
         choice: ModelChoice,
         messages: list[dict],
-        max_tokens: int | None,
+        max_tokens: Optional[int],
     ) -> str:
         provider = self.providers.get(choice.provider, {})
         base_url = provider.get("base_url", "")
@@ -332,8 +335,8 @@ class FreeModelsRouter:
         if not api_key and choice.provider not in ("ollama",):
             raise RuntimeError(f"No API key for {choice.provider}: set {provider.get('env_key')}")
 
-        import urllib.error
         import urllib.request
+        import urllib.error
 
         model_id = choice.model.split(":", 1)[1] if ":" in choice.model else choice.model
 
@@ -369,10 +372,10 @@ class FreeModelsRouter:
         self,
         model: str,
         messages: list[dict],
-        max_tokens: int | None,
+        max_tokens: Optional[int],
     ) -> str:
-        import urllib.error
         import urllib.request
+        import urllib.error
 
         base_url = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
         payload = {"model": model, "messages": messages}
@@ -416,4 +419,3 @@ if __name__ == "__main__":
     except RuntimeError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
-

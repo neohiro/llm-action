@@ -91,6 +91,10 @@ inputs:
     description: 'Cohere API key.'
     required: false
     default: ''
+  mistral-key:
+    description: 'Mistral AI API key.'
+    required: false
+    default: ''
 
 outputs:
   router-version:
@@ -203,7 +207,8 @@ runs:
           "google-ai:${{ inputs.google-ai-key }}" \
           "huggingface:${{ inputs.huggingface-key }}" \
           "nvidia:${{ inputs.nvidia-key }}" \
-          "cohere:${{ inputs.cohere-key }}"; do
+          "cohere:${{ inputs.cohere-key }}" \
+          "mistral:${{ inputs.mistral-key }}"; do
           name="${entry%%:*}"
           val="${entry#*:}"
           if [ -n "$val" ]; then
@@ -234,6 +239,7 @@ runs:
         HUGGINGFACE_API_KEY: ${{ inputs.huggingface-key }}
         NVIDIA_API_KEY: ${{ inputs.nvidia-key }}
         COHERE_API_KEY: ${{ inputs.cohere-key }}
+        MISTRAL_API_KEY: ${{ inputs.mistral-key }}
         ACTION_DATA_DIR: ${{ steps.vendor.outputs.data-dir }}
         ACTION_ROUTER_DIR: ${{ steps.vendor.outputs.router-module-path }}
       run: |
@@ -253,6 +259,7 @@ runs:
           echo "HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}"
           echo "NVIDIA_API_KEY=${NVIDIA_API_KEY}"
           echo "COHERE_API_KEY=${COHERE_API_KEY}"
+          echo "MISTRAL_API_KEY=${MISTRAL_API_KEY}"
           echo "ACTION_DATA_DIR=${ACTION_DATA_DIR}"
           echo "ACTION_ROUTER_DIR=${ACTION_ROUTER_DIR}"
         } >> "$GITHUB_ENV"

@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "updated": "2026-08-29",
+    "updated": "2026-09-22",
     "source": "neohiro/LLM knowledge base",
     "schema": "1.0",
     "public_mirror_safe": true
@@ -288,6 +288,27 @@
     "openai_compat": true,
     "notes": "Serverless inference endpoints. 10K tokens/month free. Free tier saturates quickly.",
     "public_mirror_safe": true
+  },
+  "mistral": {
+    "name": "Mistral AI",
+    "base_url": "https://api.mistral.ai/v1",
+    "auth": "bearer",
+    "env_key": "MISTRAL_API_KEY",
+    "country": "FR",
+    "region": "eu-west-3",
+    "free_models": [
+      "mistral-large-latest",
+      "mistral-medium-latest",
+      "mistral-small-latest"
+    ],
+    "tier": "free_with_limits",
+    "rate_limit": {
+      "rpm": 60,
+      "tpm": 12000,
+      "rpd": 1000
+    },
+    "openai_compat": true,
+    "notes": "1M tokens/month free trial. Mistral Large is strong at reasoning; Small/Medium good general task balance. EU-based (GDPR-friendly).",
+    "public_mirror_safe": true
   }
 }
-

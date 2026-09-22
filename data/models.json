@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "updated": "2026-08-29",
+    "updated": "2026-09-22",
     "schema": "1.0",
     "note": "country is ISO 3166-1 alpha-2 or 'LOCAL' for self-hosted",
     "public_mirror_safe": true
@@ -780,6 +780,97 @@
     "added_on": "2024-11-15",
     "last_verified": "2026-08-29",
     "public_mirror_safe": true
+  },
+  "mistral:mistral-large-latest": {
+    "provider": "mistral",
+    "country": "FR",
+    "context_window": 131072,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "tier": "free",
+    "free_until": "ongoing",
+    "rate_limit": {
+      "rpm": 60,
+      "tpm": 12000
+    },
+    "suitable_for": [
+      "reasoning",
+      "code",
+      "chat",
+      "summarize"
+    ],
+    "benchmarks": {
+      "mmlu": 84.0,
+      "humaneval": 82.2,
+      "gsm8k": 91.4
+    },
+    "license": "Mistral-Apache-2.0",
+    "added_on": "2025-04-01",
+    "last_verified": "2026-08-29",
+    "public_mirror_safe": true
+  },
+  "mistral:mistral-medium-latest": {
+    "provider": "mistral",
+    "country": "FR",
+    "context_window": 32768,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "tier": "free",
+    "free_until": "ongoing",
+    "rate_limit": {
+      "rpm": 60,
+      "tpm": 12000
+    },
+    "suitable_for": [
+      "chat",
+      "summarize",
+      "classify",
+      "extract"
+    ],
+    "license": "Mistral-Apache-2.0",
+    "added_on": "2024-10-01",
+    "last_verified": "2026-08-29",
+    "public_mirror_safe": true
+  },
+  "mistral:mistral-small-latest": {
+    "provider": "mistral",
+    "country": "FR",
+    "context_window": 32768,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "tier": "free",
+    "free_until": "ongoing",
+    "rate_limit": {
+      "rpm": 60,
+      "tpm": 12000
+    },
+    "suitable_for": [
+      "chat",
+      "classify",
+      "extract",
+      "summarize"
+    ],
+    "license": "Apache-2.0",
+    "added_on": "2024-02-26",
+    "last_verified": "2026-08-29",
+    "public_mirror_safe": true
   }
 }
-

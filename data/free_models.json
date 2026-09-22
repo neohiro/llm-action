@@ -1,7 +1,7 @@
 {
   "_meta": {
     "criteria": "Zero-cost tier; rate-limited but no payment ever required.",
-    "updated": "2026-08-29",
+    "updated": "2026-09-22",
     "schema": "1.0"
   },
   "by_country": {
@@ -38,6 +38,11 @@
       "ollama:phi3.5:3.8b",
       "ollama:mistral:7b",
       "ollama:gemma2:9b"
+    ],
+    "FR": [
+      "mistral:mistral-large-latest",
+      "mistral:mistral-medium-latest",
+      "mistral:mistral-small-latest"
     ]
   },
   "by_provider_count": {
@@ -51,10 +56,10 @@
     "google_ai": 2,
     "openrouter": 4,
     "ollama": 6,
-    "huggingface": 2
+    "huggingface": 2,
+    "mistral": 3
   },
-  "total_models": 30,
-  "total_countries": 2,
+  "total_models": 33,
+  "total_countries": 3,
   "public_mirror_safe": true
 }
-

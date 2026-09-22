@@ -23,6 +23,7 @@
     huggingface-key: ${{ secrets.HUGGINGFACE_API_KEY }}
     nvidia-key: ${{ secrets.NVIDIA_API_KEY }}
     cohere-key: ${{ secrets.COHERE_API_KEY }}
+    mistral-key: ${{ secrets.MISTRAL_API_KEY }}
     llm-model: gpt-4o
     data-dir: data
     cache-pip: true
@@ -58,6 +59,7 @@
 | `llm-model` | `gpt-4o` | Default LLM model. |
 | `llm-router-enabled` | `true` | Enable FreeModelsRouter cascade. |
 | `groq-key` … `cohere-key` | `''` | Free provider API keys (all optional). |
+| `mistral-key` | `''` | Mistral AI API key (optional; enables `mistral:*` models). |
 
 ## Outputs
 
