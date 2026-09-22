@@ -74,6 +74,124 @@
     "last_verified": "2026-08-29",
     "public_mirror_safe": true
   },
+  "groq:meta-llama/llama-4-scout-17b-16e-instruct": {
+    "provider": "groq",
+    "country": "US",
+    "context_window": 131072,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "tier": "free",
+    "free_until": "ongoing",
+    "rate_limit": {
+      "rpm": 30,
+      "tpm": 30000
+    },
+    "suitable_for": [
+      "reasoning",
+      "code",
+      "chat",
+      "summarize",
+      "classify"
+    ],
+    "license": "Llama-4-Community",
+    "added_on": "2026-04-05",
+    "last_verified": "2026-09-22",
+    "public_mirror_safe": true
+  },
+  "groq:openai/gpt-oss-120b": {
+    "provider": "groq",
+    "country": "US",
+    "context_window": 131072,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "tier": "free",
+    "free_until": "ongoing",
+    "rate_limit": {
+      "rpm": 30,
+      "tpm": 8000
+    },
+    "suitable_for": [
+      "reasoning",
+      "code",
+      "chat",
+      "classify",
+      "summarize"
+    ],
+    "license": "Apache-2.0",
+    "added_on": "2026-05-06",
+    "last_verified": "2026-09-22",
+    "public_mirror_safe": true
+  },
+  "groq:qwen/qwen3-32b": {
+    "provider": "groq",
+    "country": "US",
+    "context_window": 131072,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "tier": "free",
+    "free_until": "ongoing",
+    "rate_limit": {
+      "rpm": 60,
+      "tpm": 6000
+    },
+    "suitable_for": [
+      "chat",
+      "classify",
+      "summarize",
+      "code"
+    ],
+    "license": "Apache-2.0",
+    "added_on": "2026-03-02",
+    "last_verified": "2026-09-22",
+    "public_mirror_safe": true
+  },
+  "groq:moonshotai/kimi-k2-instruct": {
+    "provider": "groq",
+    "country": "US",
+    "context_window": 262144,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "tier": "free",
+    "free_until": "ongoing",
+    "rate_limit": {
+      "rpm": 60,
+      "tpm": 10000
+    },
+    "suitable_for": [
+      "reasoning",
+      "chat",
+      "classify",
+      "summarize"
+    ],
+    "license": "Modified-MIT",
+    "added_on": "2026-06-10",
+    "last_verified": "2026-09-22",
+    "public_mirror_safe": true
+  },
   "groq:whisper-large-v3-turbo": {
     "provider": "groq",
     "country": "US",

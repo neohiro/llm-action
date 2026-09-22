@@ -8,6 +8,10 @@
     "US": [
       "groq:llama-3.1-8b-instant",
       "groq:llama-3.3-70b-versatile",
+      "groq:meta-llama/llama-4-scout-17b-16e-instruct",
+      "groq:openai/gpt-oss-120b",
+      "groq:qwen/qwen3-32b",
+      "groq:moonshotai/kimi-k2-instruct",
       "groq:whisper-large-v3-turbo",
       "cerebras:llama-3.3-70b",
       "cerebras:qwen-2.5-72b-instruct",
@@ -46,7 +50,7 @@
     ]
   },
   "by_provider_count": {
-    "groq": 3,
+    "groq": 7,
     "cerebras": 2,
     "sambanova": 1,
     "github_models": 4,
@@ -59,7 +63,7 @@
     "huggingface": 2,
     "mistral": 3
   },
-  "total_models": 33,
+  "total_models": 37,
   "total_countries": 3,
   "public_mirror_safe": true
 }
